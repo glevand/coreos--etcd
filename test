@@ -19,7 +19,9 @@ source ./build
 # build tests with vendored dependencies
 etcd_setup_gopath
 
-if [ -z "$PASSES" ]; then
+if [ "$PASSES" == "all" ]; then
+	PASSES="fmt bom dep compile build unit grpcproxy release integration"
+elif [ -z "$PASSES" ]; then
 	PASSES="fmt bom dep compile build unit"
 fi
 
