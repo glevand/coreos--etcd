@@ -43,6 +43,9 @@ TEST_PKGS=`find . -name \*_test.go | while read a; do dirname $a; done | sort | 
 FORMATTABLE=`find . -name \*.go | while read a; do echo "$(dirname $a)/*.go"; done | sort | uniq | egrep -v "$IGNORE_PKGS" | sed "s|\./||g"`
 TESTABLE_AND_FORMATTABLE=`echo "$TEST_PKGS" | egrep -v "$INTEGRATION_PKGS"`
 
+: ${E2E_TIMEOUT:="15m"}
+: ${INTEGRATION_TIMEOUT:="15m"}
+
 # check if user provided PKG override
 if [ -z "${USERPKG}" ]; then
 	TEST=$TESTABLE_AND_FORMATTABLE
@@ -83,7 +86,7 @@ function unit_pass {
 
 function integration_pass {
 	echo "Running integration tests..."
-	go test -timeout 15m -v -cpu 1,2,4 $@ ${REPO_PATH}/integration
+	go test -timeout ${INTEGRATION_TIMEOUT} -v -cpu 1,2,4 $@ ${REPO_PATH}/integration
 	go test -timeout 1m -v ${RACE} -cpu 1,2,4 $@ ${REPO_PATH}/client/integration
 	go test -timeout 10m -v ${RACE} -cpu 1,2,4 $@ ${REPO_PATH}/clientv3/integration
 	go test -timeout 1m -v -cpu 1,2,4 $@ ${REPO_PATH}/contrib/raftexample
@@ -156,15 +159,15 @@ function cov_pass {
 
 function e2e_pass {
 	echo "Running e2e tests..."
-	go test -timeout 15m -v -cpu 1,2,4 $@ ${REPO_PATH}/e2e
+	go test -timeout ${E2E_TIMEOUT} -v -cpu 1,2,4 $@ ${REPO_PATH}/e2e
 }
 
 function integration_e2e_pass {
 	echo "Running integration and e2e tests..."
 
-	go test -timeout 15m -v -cpu 1,2,4 $@ ${REPO_PATH}/e2e &
+	go test -timeout ${E2E_TIMEOUT} -v -cpu 1,2,4 $@ ${REPO_PATH}/e2e &
 	e2epid="$!"
-	go test -timeout 15m -v -cpu 1,2,4 $@ ${REPO_PATH}/integration &
+	go test -timeout ${INTEGRATION_TIMEOUT} -v -cpu 1,2,4 $@ ${REPO_PATH}/integration &
 	intpid="$!"
 	wait $e2epid
 	wait $intpid
