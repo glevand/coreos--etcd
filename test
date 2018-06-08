@@ -140,6 +140,18 @@ if [ ! -z "${TESTCASE}" ]; then
 	RUN_ARG="-run=${TESTCASE}"
 fi
 
+e2epid=
+intpid=
+
+function trap_handler {
+	set +e
+	trap - EXIT
+	[ -z "$e2epid" ] || kill $e2epid 2> /dev/null
+	[ -z "$intpid" ] || kill $intpid 2> /dev/null
+	killall e2e.test integration.test 2> /dev/null
+	kill -INT $$
+}
+
 function unit_pass {
 	echo "Running unit tests..."
 	GO_TEST_FLAG=""
@@ -336,7 +348,9 @@ function integration_e2e_pass {
 	go test -timeout ${INTEGRATION_TIMEOUT} -v -cpu "${TEST_CPUS}" "$@" "${REPO_PATH}/integration" &
 	intpid="$!"
 	wait $e2epid
+	e2epid=
 	wait $intpid
+	intpid=
 	integration_extra "$@"
 }
 
@@ -679,6 +693,8 @@ function build_pass {
 	GO_BUILD_FLAGS="-v" etcd_build
 	GO_BUILD_FLAGS="-v" tools_build
 }
+
+trap trap_handler EXIT
 
 for pass in $PASSES; do
 	echo "Starting '$pass' pass at $(date)"
