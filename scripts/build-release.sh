@@ -27,7 +27,7 @@ pushd "${ETCD_ROOT}" >/dev/null
 	echo Building etcd binary...
 	./scripts/build-binary "${VERSION}"
 
-	for TARGET_ARCH in "amd64" "arm64" "ppc64le"; do
+	for TARGET_ARCH in "amd64" "arm64"; do
 		echo Building ${TARGET_ARCH} docker image...
 		GOARCH=${TARGET_ARCH} BINARYDIR=release/etcd-${VERSION}-linux-${TARGET_ARCH} BUILDDIR=release ./scripts/build-docker "${VERSION}"
 	done

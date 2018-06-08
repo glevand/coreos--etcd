@@ -17,7 +17,7 @@ function setup_env {
 	local ver=${2}
 
 	if [ ! -d "${proj}" ]; then
-		git clone https://github.com/coreos/"${proj}"
+		git clone --reference /home/geoff/projects/coreos/git/coreos--etcd https://github.com/coreos/${proj}
 	fi
 
 	pushd "${proj}" >/dev/null
@@ -47,7 +47,7 @@ function package {
 
 	cp etcd/README.md "${target}"/README.md
 	cp etcd/etcdctl/README.md "${target}"/README-etcdctl.md
-	cp etcd/etcdctl/READMEv2.md "${target}"/READMEv2-etcdctl.md
+	#cp etcd/etcdctl/READMEv2.md "${target}"/READMEv2-etcdctl.md
 
 	cp -R etcd/Documentation "${target}"/Documentation
 }
@@ -57,13 +57,13 @@ function main {
 	cd release
 	setup_env "${PROJ}" "${VER}"
 
-	for os in darwin windows linux; do
+	for os in linux; do
 		export GOOS=${os}
 		TARGET_ARCHS=("amd64")
 
 		if [ ${GOOS} == "linux" ]; then
 			TARGET_ARCHS+=("arm64")
-			TARGET_ARCHS+=("ppc64le")
+			#TARGET_ARCHS+=("ppc64le")
 		fi
 
 		for TARGET_ARCH in "${TARGET_ARCHS[@]}"; do
