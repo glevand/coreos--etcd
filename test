@@ -74,6 +74,9 @@ FORMATTABLE=$(find . -name \*.go | while read -r a; do echo "$(dirname "$a")/*.g
 
 TESTABLE_AND_FORMATTABLE=$(echo "$TEST_PKGS" | grep -vE "$INTEGRATION_PKGS")
 
+: ${E2E_TIMEOUT:="15m"}
+: ${INTEGRATION_TIMEOUT:="15m"}
+
 # check if user provided PKG override
 if [ -z "${USERPKG}" ]; then
 	TEST=$TESTABLE_AND_FORMATTABLE
@@ -180,7 +183,7 @@ function integration_pass {
 	# if TESTCASE not set, PKG set, run all test cases in specified package
 	# if TESTCASE not set, PKG not set, run all tests in all integration and integration_extra packages
 	if [ -z "${TESTCASE}" ] && [ -z "${USERPKG}" ]; then
-		go test -timeout "${USERTIMEOUT}" -v -cpu "${TEST_CPUS}" "$@" "${REPO_PATH}/integration"
+		go test -timeout "${INTEGRATION_TIMEOUT}" -v -cpu "${TEST_CPUS}" "$@" "${REPO_PATH}/integration"
 		integration_extra "$@"
 	else
 		if [ -z "${USERPKG}" ]; then
@@ -192,7 +195,7 @@ function integration_pass {
 		else
 			INTEGTESTPKG=("${TEST[@]}")
 		fi
-		go test -timeout "${USERTIMEOUT}" -v -cpu "${TEST_CPUS}" "${RUN_ARG}"  "$@" "${INTEGTESTPKG[@]}"
+		go test -timeout "${INTEGRATION_TIMEOUT}" -v -cpu "${TEST_CPUS}" "${RUN_ARG}"  "$@" "${INTEGTESTPKG[@]}"
 	fi
 }
 
@@ -322,15 +325,15 @@ function e2e_pass {
 		USERTIMEOUT="${TIMEOUT}"
 	fi
 
-	go test -timeout "${USERTIMEOUT}" -v -cpu "${TEST_CPUS}" "${RUN_ARG}"  "$@" "${REPO_PATH}/tests/e2e"
+	go test -timeout "${E2E_TIMEOUT}" -v -cpu "${TEST_CPUS}" "${RUN_ARG}"  "$@" "${REPO_PATH}/tests/e2e"
 }
 
 function integration_e2e_pass {
 	echo "Running integration and e2e tests..."
 
-	go test -timeout 20m -v -cpu "${TEST_CPUS}" "$@" "${REPO_PATH}/tests/e2e" &
+	go test -timeout ${E2E_TIMEOUT} -v -cpu "${TEST_CPUS}" "$@" "${REPO_PATH}/tests/e2e" &
 	e2epid="$!"
-	go test -timeout 20m -v -cpu "${TEST_CPUS}" "$@" "${REPO_PATH}/integration" &
+	go test -timeout ${INTEGRATION_TIMEOUT} -v -cpu "${TEST_CPUS}" "$@" "${REPO_PATH}/integration" &
 	intpid="$!"
 	wait $e2epid
 	wait $intpid
