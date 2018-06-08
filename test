@@ -40,7 +40,14 @@ if [[ "${PASSES}" == *"functional"* ]]; then
 	./functional/build
 fi
 
-if [ -z "$PASSES" ]; then
+if [ "$PASSES" == "all" ]; then
+	# unit integration functional cov e2e integration_e2e grpcproxy release
+	# shellcheck markdown_you markdown_marker goword gofmt govet
+	# govet_shadow gosimple unused unparam staticcheck unconvert ineffassign
+	# nakedret license_header receiver_name commit_title fmt bom dep
+	# build_cov build
+	PASSES="fmt bom dep build unit grpcproxy release integration"
+elif [ -z "$PASSES" ]; then
 	PASSES="fmt bom dep build unit"
 fi
 
