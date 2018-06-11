@@ -9,26 +9,7 @@ fi
 
 VERSION=${1}
 : ${ARCH:="$(go env GOARCH)"}
-
-case ${ARCH} in
-amd64)
-	DOCKERFILE="Dockerfile-release"
-	;;
-ppc64le)
-	DOCKERFILE="Dockerfile-release.cross"
-	DOCKER_ARGS="--build-arg DOCKER_FROM=\"ppc64le/alpine:latest\""
-	VERSION+="-${ARCH}"
-	;;
-arm64)
-	DOCKERFILE="Dockerfile-release.cross"
-	DOCKER_ARGS="--build-arg DOCKER_FROM=\"arm64v8/alpine:latest\""
-	VERSION+="-${ARCH}"
-	;;
-*)
-	echo "ERROR: Unknown arch ${ARCH}."
-	exit 1
-	;;
-esac
+DOCKERFILE="Dockerfile-release"
 
 if [ -z "${BINARYDIR}" ]; then
 	RELEASE="etcd-${1}"-$(go env GOOS)-$(go env GOARCH)
@@ -40,6 +21,11 @@ if [ -z "${BINARYDIR}" ]; then
 		exit 1
 	fi
 	tar -zvxf "${TARFILE}"
+fi
+
+if [ "${ARCH}" != "amd64" ]; then
+	DOCKERFILE+=".${ARCH}"
+	VERSION+="-${ARCH}"
 fi
 
 BINARYDIR=${BINARYDIR:-.}
@@ -54,8 +40,8 @@ cp "${BINARYDIR}"/etcd "${BINARYDIR}"/etcdctl "${IMAGEDIR}"
 cat ./"${DOCKERFILE}" > "${IMAGEDIR}"/Dockerfile
 
 if [ -z "$TAG" ]; then
-    docker build -t "gcr.io/etcd-development/etcd:${VERSION}" ${DOCKER_ARGS} "${IMAGEDIR}"
-    docker build -t "quay.io/coreos/etcd:${VERSION}" ${DOCKER_ARGS} "${IMAGEDIR}"
+    docker build -t "gcr.io/etcd-development/etcd:${VERSION}" "${IMAGEDIR}"
+    docker build -t "quay.io/coreos/etcd:${VERSION}" "${IMAGEDIR}"
 else
-    docker build -t "${TAG}:${VERSION}" ${DOCKER_ARGS} "${IMAGEDIR}"
+    docker build -t "${TAG}:${VERSION}" "${IMAGEDIR}"
 fi
