@@ -8,7 +8,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 VERSION=${1}
-ARCH=$(go env GOARCH)
+: ${ARCH:="$(go env GOARCH)"}
 DOCKERFILE="Dockerfile-release"
 
 if [ -z "${BINARYDIR}" ]; then
